@@ -1,0 +1,5 @@
+{
+  "name": "Fortnite Stats Tracker",
+  "description": "A sleek and modern web application to look up and display player statistics for Fortnite. Enter an Epic Games username to view detailed lifetime stats and performance metrics across different game modes.",
+  "requestFramePermissions": []
+}
