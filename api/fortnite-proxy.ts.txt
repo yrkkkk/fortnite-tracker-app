@@ -1,46 +1,41 @@
-// api/fortnite-proxy.ts
+// СКОПИРУЙТЕ ЭТОТ КОД В api/fortnite-proxy.ts
+
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import fetch from 'node-fetch';
 
-// Имя переменной окружения, которое вы будете использовать в Vercel для API-ключа
+// Имя переменной окружения для API-ключа
 const FORTNITE_API_KEY_ENV_NAME = 'FORTNITE_TRACKER_API_KEY'; 
 
-// Базовый URL для внешнего API Fortnite Tracker (Tracker.gg)
+// Базовые URL для внешнего API
 const FORTNITE_EXTERNAL_PROFILE_API_BASE_URL = 'https://api.tracker.gg/api/v2/fortnite/standard/profile/';
 
 export default async function (request: VercelRequest, response: VercelResponse) {
-  // Извлекаем параметры запроса из URL, который пришел от вашего фронтенда
   const { type, username, platform, region } = request.query;
-
-  // 1. Получаем API-ключ из переменной окружения Vercel
   const apiKey = process.env[FORTNITE_API_KEY_ENV_NAME];
 
   if (!apiKey) {
-    console.error('API key not configured for proxy. Environment variable:', FORTNITE_API_KEY_ENV_NAME);
-    return response.status(500).json({ error: 'API key for Fortnite Tracker is not configured. Please set the ' + FORTNITE_API_KEY_ENV_NAME + ' environment variable in Vercel.' });
+    console.error('API key not configured for proxy.');
+    return response.status(500).json({ error: 'API key for Fortnite Tracker is not configured in Vercel.' });
   }
 
   let externalApiUrl = '';
-  // 2. Определяем заголовки, включая API-ключ
-  let headers: Record<string, string> = {
+  const headers: Record<string, string> = {
     'TRN-Api-Key': apiKey, 
     'Content-Type': 'application/json',
   };
 
   try {
     if (type === 'profile' && username && platform) {
-      // Эта часть для профиля остается без изменений
       const apiPlatform = platform === 'pc' || platform === 'console' || platform === 'mobile' ? 'epic' : platform;
       externalApiUrl = `${FORTNITE_EXTERNAL_PROFILE_API_BASE_URL}${apiPlatform}/${encodeURIComponent(String(username))}`;
     
-    } else if (type === 'leaderboard') { // <-- ВОТ НОВЫЙ БЛОК ДЛЯ LEADERBOARD
-      // !!! ВАЖНО: ЭТОТ URL - ПРОСТО ПРИМЕР. Замените его на настоящий из документации API, если он неверный.
-      externalApiUrl = 'https://fortnitetracker.com/leaderboards/all/Top1?';
+    } else if (type === 'leaderboard') {
+      // Это реальный URL для получения таблицы лидеров по победам
+      externalApiUrl = 'https://api.tracker.gg/api/v2/fortnite/standard/leaderboards/all?type=stats&platform=all&board=Wins';
     
     } else if (type === 'powerranking' && username && platform && region) {
-        // Эта часть для Power Ranking остается без изменений (пока не реализована)
-        console.warn('Power Ranking API endpoint not fully implemented in proxy.');
-        return response.status(400).json({ error: 'Power Ranking data is not yet supported by this proxy.' });
+        console.warn('Power Ranking API endpoint is not implemented.');
+        return response.status(400).json({ error: 'Power Ranking data is not supported.' });
     } else {
       return response.status(400).json({ error: 'Invalid API request type or missing parameters.' });
     }
@@ -52,8 +47,7 @@ export default async function (request: VercelRequest, response: VercelResponse)
     if (!apiResponse.ok) {
       console.error('External API returned an error:', apiResponse.status, data);
       return response.status(apiResponse.status).json({ 
-        error: data.errors?.[0]?.message || data.message || `External API request failed with status ${apiResponse.status}`, 
-        externalApiError: data 
+        error: data.errors?.[0]?.message || data.message || `External API request failed`, 
       });
     }
 
