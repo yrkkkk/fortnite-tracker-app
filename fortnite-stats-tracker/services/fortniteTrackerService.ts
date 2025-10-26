@@ -1,3 +1,4 @@
+// ХОРОШАЯ СТРОКА, ВСТАВЬТЕ ЕЕ:
 import type { FortniteApiResponse, FortniteError, LeaderboardEntry, PowerRankingResult, PowerRankingError } from '../types';
 
 // The API calls are now directed to our own serverless function proxy.
