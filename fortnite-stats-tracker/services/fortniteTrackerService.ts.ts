@@ -37,22 +37,44 @@ export const getProfile = async (username: string, platform: string): Promise<Fo
  * This remains mocked as it's a stable demonstration feature.
  * @returns {Promise<LeaderboardEntry[]>}
  */
-export const getLeaderboard = async (): Promise<LeaderboardEntry[]> => {
-    console.log('Fetching leaderboard data (mocked).');
-    await new Promise(resolve => setTimeout(resolve, 800)); // Simulate network delay
-    return [
-      { id: 'ninja', rank: 1, epicUserHandle: 'Ninja', platformNameLong: 'PC', stat: { key: 'Wins', label: 'Wins', value: '25,123', valueInt: 25123, rank: 1, percentile: 99.9, displayValue: '25,123' } },
-      { id: 'tfue', rank: 2, epicUserHandle: 'Tfue', platformNameLong: 'PC', stat: { key: 'Wins', label: 'Wins', value: '22,456', valueInt: 22456, rank: 2, percentile: 99.8, displayValue: '22,456' } },
-      { id: 'bugha', rank: 3, epicUserHandle: 'Bugha', platformNameLong: 'PC', stat: { key: 'Wins', label: 'Wins', value: '19,876', valueInt: 19876, rank: 3, percentile: 99.7, displayValue: '19,876' } },
-      { id: 'mongraal', rank: 4, epicUserHandle: 'Mongraal', platformNameLong: 'PC', stat: { key: 'Wins', label: 'Wins', value: '18,123', valueInt: 18123, rank: 4, percentile: 99.6, displayValue: '18,123' } },
-      { id: 'clix', rank: 5, epicUserHandle: 'Clix', platformNameLong: 'PC', stat: { key: 'Wins', label: 'Wins', value: '17,543', valueInt: 17543, rank: 5, percentile: 99.5, displayValue: '17,543' } },
-      { id: 'benjyfishy', rank: 6, epicUserHandle: 'benjyfishy', platformNameLong: 'PC', stat: { key: 'Wins', label: 'Wins', value: '16,987', valueInt: 16987, rank: 6, percentile: 99.4, displayValue: '16,987' } },
-      { id: 'mrsavage', rank: 7, epicUserHandle: 'MrSavage', platformNameLong: 'PC', stat: { key: 'Wins', label: 'Wins', value: '16,234', valueInt: 16234, rank: 7, percentile: 99.3, displayValue: '16,234' } },
-      { id: 'zayt', rank: 8, epicUserHandle: 'Zayt', platformNameLong: 'PC', stat: { key: 'Wins', label: 'Wins', value: '15,678', valueInt: 15678, rank: 8, percentile: 99.2, displayValue: '15,678' } },
-      { id: 'saf', rank: 9, epicUserHandle: 'Saf', platformNameLong: 'PC', stat: { key: 'Wins', label: 'Wins', value: '15,111', valueInt: 15111, rank: 9, percentile: 99.1, displayValue: '15,111' } },
-      { id: 'epics_whale', rank: 10, epicUserHandle: 'EpikWhale', platformNameLong: 'PC', stat: { key: 'Wins', label: 'Wins', value: '14,888', valueInt: 14888, rank: 10, percentile: 99.0, displayValue: '14,888' } },
-    ];
+// В файле services/fortniteTrackerService.ts
+
+import type { FortniteApiResponse, FortniteError, LeaderboardEntry, ... } from '../types'; // Убедитесь, что все типы импортированы
+
+const PROXY_URL = '/api/fortnite-proxy';
+
+// ... ваша функция getProfile остается без изменений ...
+
+/**
+ * Fetches the global wins leaderboard via the backend proxy.
+ * @returns {Promise<LeaderboardEntry[] | { error: string }>}
+ */
+export const getLeaderboard = async (): Promise<LeaderboardEntry[] | { error: string }> => {
+  console.log('Fetching REAL leaderboard data via proxy.');
+  
+  try {
+    // Мы добавляем новый тип запроса 'leaderboard' в URL
+    const response = await fetch(`${PROXY_URL}?type=leaderboard`);
+    
+    const data = await response.json();
+
+    if (!response.ok || data.error) {
+      console.error('Failed to fetch leaderboard:', data.error);
+      return { error: data.error || `API Error: ${response.statusText}` };
+    }
+    
+    // API может вернуть данные в другом формате, 
+    // возможно, их придется обработать, чтобы они соответствовали типу LeaderboardEntry[]
+    // Например, если данные в data.items: return data.items as LeaderboardEntry[];
+    return data as LeaderboardEntry[];
+
+  } catch (error) {
+    console.error('Proxy call for leaderboard failed:', error);
+    return { error: 'Failed to fetch leaderboard from the proxy server.' };
+  }
 };
+
+// ... ваша функция getPowerRanking остается без изменений ...
 
 /**
  * Fetches a player's regional power ranking via the backend proxy.

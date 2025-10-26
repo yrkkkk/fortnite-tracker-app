@@ -6,7 +6,6 @@ import fetch from 'node-fetch';
 const FORTNITE_API_KEY_ENV_NAME = 'FORTNITE_TRACKER_API_KEY'; 
 
 // Базовый URL для внешнего API Fortnite Tracker (Tracker.gg)
-// Для профилей: https://api.tracker.gg/api/v2/fortnite/standard/profile/
 const FORTNITE_EXTERNAL_PROFILE_API_BASE_URL = 'https://api.tracker.gg/api/v2/fortnite/standard/profile/';
 
 export default async function (request: VercelRequest, response: VercelResponse) {
@@ -22,7 +21,7 @@ export default async function (request: VercelRequest, response: VercelResponse)
   }
 
   let externalApiUrl = '';
-  // 2. Определяем заголовки, включая API-ключ, который Tracker.gg ожидает как 'TRN-Api-Key'
+  // 2. Определяем заголовки, включая API-ключ
   let headers: Record<string, string> = {
     'TRN-Api-Key': apiKey, 
     'Content-Type': 'application/json',
@@ -30,17 +29,18 @@ export default async function (request: VercelRequest, response: VercelResponse)
 
   try {
     if (type === 'profile' && username && platform) {
-      // Предполагаем, что 'platform' из фронтенда (pc, console) нужно преобразовать в 'epic' для tracker.gg
+      // Эта часть для профиля остается без изменений
       const apiPlatform = platform === 'pc' || platform === 'console' || platform === 'mobile' ? 'epic' : platform;
-      
       externalApiUrl = `${FORTNITE_EXTERNAL_PROFILE_API_BASE_URL}${apiPlatform}/${encodeURIComponent(String(username))}`;
-      
+    
+    } else if (type === 'leaderboard') { // <-- ВОТ НОВЫЙ БЛОК ДЛЯ LEADERBOARD
+      // !!! ВАЖНО: ЭТОТ URL - ПРОСТО ПРИМЕР. Замените его на настоящий из документации API, если он неверный.
+      externalApiUrl = 'https://fortnitetracker.com/leaderboards/all/Top1?';
+    
     } else if (type === 'powerranking' && username && platform && region) {
-        // !!! ВНИМАНИЕ: ЭТОТ ЭНДПОИНТ ДЛЯ POWER RANKING НЕ РЕАЛИЗОВАН В ЭТОМ ПРИМЕРЕ !!!
-        // У Tracker.gg Power Ranking может быть свой отдельный API или быть доступен через другой путь.
-        // Вам нужно будет уточнить конкретный URL для Power Ranking.
-        console.warn('Power Ranking API endpoint not fully implemented in proxy or not supported by the current configuration.');
-        return response.status(400).json({ error: 'Power Ranking data is not yet supported by this proxy configuration or missing proper external API URL.' });
+        // Эта часть для Power Ranking остается без изменений (пока не реализована)
+        console.warn('Power Ranking API endpoint not fully implemented in proxy.');
+        return response.status(400).json({ error: 'Power Ranking data is not yet supported by this proxy.' });
     } else {
       return response.status(400).json({ error: 'Invalid API request type or missing parameters.' });
     }
